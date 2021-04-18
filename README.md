@@ -1,3 +1,6 @@
+# My patch of slstatus
+Includes wifi info, speaker volume, mic volume, RAM usage, CPU usage, battery percentage and date & time.
+
 # slstatus - suckless status
 slstatus is a suckless status monitor for window managers that use WM_NAME
 (e.g. dwm) or stdin to fill the status bar.
