@@ -58,22 +58,43 @@ static const char unknown_str[] = "n/a";
  * uid                 UID of current user             NULL
  * uptime              system uptime                   NULL
  * username            username of current user        NULL
- * vol_perc            OSS/ALSA volume in percent      mixer file (/dev/mixer)
+ * vol_perc            OSS/ALSA volume in percent      mixer control ("Master")
  *                                                     NULL on OpenBSD
  * wifi_perc           WiFi signal in percent          interface name (wlan0)
  * wifi_essid          WiFi ESSID                      interface name (wlan0)
  */
+
+const char *
+battery(const char * bat) {
+  int perc = battery_perc(bat);
+  const char * status = battery_state(bat);
+  if (status == NULL)
+    return NULL;
+  if (*status == '+' || *status =='o') {
+    return bprintf(" ^c#88c0d0^  ^c#abb2bf^%d%% ^c#666666^|", perc);
+  } else if (perc > 90) {
+    return bprintf(" ^c#a3be8c^  ^c#abb2bf^%d%% ^c#666666^|", perc);
+  } else if (perc > 70) {
+    return bprintf(" ^c#a3be8c^  ^c#abb2bf^%d%% ^c#666666^|", perc);
+  } else if (perc > 40) {
+    return bprintf(" ^c#f4ac6c^  ^c#abb2bf^%d%% ^c#666666^|", perc);
+  } else if (perc > 20) {
+    return bprintf(" ^c#bf616a^  ^c#abb2bf^%d%% ^c#666666^|", perc);
+  } else if (perc >= 0) {
+    return bprintf(" ^c#bf616a^  ^c#abb2bf^%d%% ^c#666666^|", perc);
+  }
+  return NULL;
+}
+
+// alt string is used when function returns NULL
 static const struct arg args[] = {
-	/* function format          argument */
-	//{ datetime, "%s",           "%F %T" },
-	//{ wifi_perc, "W: (%3s%% on %s", "wlp10s0f0" },
-	{ wifi_perc, "[  %3s%%, ", "wlp10s0f0" },
-  { netspeed_rx, " %sB/s, ", "wlp10s0f0" },
-  { netspeed_tx, "祝 %sB/s]", "wlp10s0f0" },
-	{ run_command, "%s", "bash /home/akash/bin/display_volume" },
-	{ cpu_perc, "[CPU  %s%%] ", NULL	      },
-	{ ram_perc, "[RAM  %s%%] ", NULL	      },
-	{ battery_state, "[  %s"    , "BAT1" },
-  { battery_perc,  " %3s%%] ", "BAT1" },
-	{ datetime, "%s",           "%a %b %d %r" },
+// function               format                                                         alt string                                                                argument
+  {wifi_essid,            "^c#666666^| ^c#a3be8c^󰤨 ^c#abb2bf^%s ^c#666666^|",            "^c#666666^| ^c#bf616a^󰤭 ^c#abb2bf^Disconnected ^c#666666^|",             "wlan0"},
+  {vol_perc,              " ^c#d7ba7d^  ^c#abb2bf^%s%% ^c#666666^|",                    " ^c#d7ba7d^  ^c#abb2bf^Mute ^c#666666^|",                               "Master"},
+  {battery,               "%s",                                                          "",                                                                       "BAT1"},
+  {cpu_perc,              " ^c#5e81ac^  ^c#abb2bf^%s%% ^c#666666^|",                    "",                                                                       NULL},
+  // {ram_perc,              " ^c#b48ead^  ^c#abb2bf^%s%% ^c#666666^|",                    "",                                                                       NULL},
+  {ram_used,              " ^c#b48ead^  ^c#abb2bf^%sB / ",                              "",                                                                       NULL},
+  {ram_total,             "^c#abb2bf^%sB ^c#666666^|",                                   "",                                                                       NULL},
+  {datetime,              " ^c#88c0d0^  ^c#abb2bf^%s ",                                 "",                                                                       "%b %d - %I:%M%p"},
 };
