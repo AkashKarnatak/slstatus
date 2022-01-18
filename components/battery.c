@@ -26,7 +26,7 @@
 		return NULL;
 	}
 
-	const char *
+  int
 	battery_perc(const char *bat)
 	{
 		int perc;
@@ -34,13 +34,13 @@
 
 		if (esnprintf(path, sizeof(path),
 		              "/sys/class/power_supply/%s/capacity", bat) < 0) {
-			return NULL;
+			return 0;
 		}
 		if (pscanf(path, "%d", &perc) != 1) {
-			return NULL;
+			return 0;
 		}
 
-		return bprintf("%d", perc);
+		return perc;
 	}
 
 	const char *
@@ -142,16 +142,16 @@
 		return close(fd), 1;
 	}
 
-	const char *
+  int
 	battery_perc(const char *unused)
 	{
 		struct apm_power_info apm_info;
 
 		if (load_apm_power_info(&apm_info)) {
-			return bprintf("%d", apm_info.battery_life);
+			return apm_info.battery_life;
 		}
 
-		return NULL;
+		return 0;
 	}
 
 	const char *
@@ -199,7 +199,7 @@
 #elif defined(__FreeBSD__)
 	#include <sys/sysctl.h>
 
-	const char *
+  int
 	battery_perc(const char *unused)
 	{
 		int cap;
@@ -208,9 +208,9 @@
 		len = sizeof(cap);
 		if (sysctlbyname("hw.acpi.battery.life", &cap, &len, NULL, 0) == -1
 				|| !len)
-			return NULL;
+			return 0;
 
-		return bprintf("%d", cap);
+		return cap;
 	}
 
 	const char *
