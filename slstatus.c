@@ -14,6 +14,7 @@
 struct arg {
 	const char *(*func)();
 	const char *fmt;
+  const char *alt;
 	const char *args;
 };
 
@@ -90,8 +91,11 @@ main(int argc, char *argv[])
 		for (i = len = 0; i < LEN(args); i++) {
 			if (!(res = args[i].func(args[i].args))) {
 				res = unknown_str;
-			}
-			if ((ret = esnprintf(status + len, sizeof(status) - len,
+        if ((ret = esnprintf(status + len, sizeof(status) - len,
+                            args[i].alt)) < 0) {
+          break;
+        }
+			} else if ((ret = esnprintf(status + len, sizeof(status) - len,
 			                    args[i].fmt, res)) < 0) {
 				break;
 			}
