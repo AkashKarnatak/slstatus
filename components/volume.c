@@ -181,37 +181,36 @@
 		return bprintf("%d", value);
 	}
 #else
-	#include <sys/soundcard.h>
+  #include <alsa/asoundlib.h>
 
-	const char *
-	vol_perc(const char *card)
-	{
-		size_t i;
-		int v, afd, devmask;
-		char *vnames[] = SOUND_DEVICE_NAMES;
+  const char *
+  vol_perc(const char *selem_name) {
+    int active;
+    long volume, min, max;
+    snd_mixer_t *handle;
+    snd_mixer_selem_id_t *sid;
+    snd_mixer_elem_t* elem;
+    const char *card = "default";
 
-		if ((afd = open(card, O_RDONLY | O_NONBLOCK)) < 0) {
-			warn("open '%s':", card);
-			return NULL;
-		}
+    snd_mixer_open(&handle, 0);
+    snd_mixer_attach(handle, card);
+    snd_mixer_selem_register(handle, NULL, NULL);
+    snd_mixer_load(handle);
 
-		if (ioctl(afd, (int)SOUND_MIXER_READ_DEVMASK, &devmask) < 0) {
-			warn("ioctl 'SOUND_MIXER_READ_DEVMASK':");
-			close(afd);
-			return NULL;
-		}
-		for (i = 0; i < LEN(vnames); i++) {
-			if (devmask & (1 << i) && !strcmp("vol", vnames[i])) {
-				if (ioctl(afd, MIXER_READ(i), &v) < 0) {
-					warn("ioctl 'MIXER_READ(%ld)':", i);
-					close(afd);
-					return NULL;
-				}
-			}
-		}
+    snd_mixer_selem_id_alloca(&sid);
+    snd_mixer_selem_id_set_index(sid, 0);
+    snd_mixer_selem_id_set_name(sid, selem_name);
+    elem = snd_mixer_find_selem(handle, sid);
 
-		close(afd);
+    snd_mixer_selem_get_playback_volume_range(elem, &min, &max);
+    snd_mixer_selem_get_playback_volume(elem, SND_MIXER_SCHN_FRONT_LEFT, &volume);
+    snd_mixer_selem_get_playback_switch(elem, SND_MIXER_SCHN_FRONT_LEFT, &active);
 
-		return bprintf("%d", v & 0xff);
-	}
+    snd_mixer_close(handle);
+
+    if (!active)
+      return NULL;
+
+    return bprintf("%0.f", (double) volume / (double) max * 100);
+  }
 #endif
