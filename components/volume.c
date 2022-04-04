@@ -190,7 +190,7 @@
     snd_mixer_t *handle;
     snd_mixer_selem_id_t *sid;
     snd_mixer_elem_t* elem;
-    const char *card = "default";
+    const char *card = "hw:PCH";
 
     snd_mixer_open(&handle, 0);
     snd_mixer_attach(handle, card);
